@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "allowJs": true,
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "lib": ["DOM", "ES2015"],
+    "moduleResolution": "bundler",
+    "jsxImportSource": "preact",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
