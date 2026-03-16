@@ -4,6 +4,10 @@ import { authClient } from "../../lib/auth_client";
 type AuthState = {
   loggedIn?: boolean;
   loading: boolean;
+  user?: {
+    name: string;
+    email: string;
+  };
 };
 
 export const authState = signal<AuthState>({ loading: true });
@@ -11,7 +15,7 @@ export const authState = signal<AuthState>({ loading: true });
 export async function sync() {
   const { data, error } = await authClient.getSession();
   if (data?.user.id) {
-    authState.value = { loading: false, loggedIn: true };
+    authState.value = { loading: false, loggedIn: true, user: data.user };
     return;
   }
   authState.value = { loading: false, loggedIn: false };

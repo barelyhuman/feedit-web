@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "preact/hooks";
-import { useEnforceAuth } from "../store/auth";
-import { authClient } from "../../lib/auth_client";
+import { sync, authState, useEnforceAuth } from "../store/auth";
 import {
   feedsState,
   selectedFeedId,
@@ -13,6 +12,7 @@ import {
   addFeed,
   markAsRead,
 } from "../store/feeds";
+import { authClient } from "../../lib/auth_client";
 
 function formatDate(dateStr) {
   if (!dateStr) return null;
@@ -211,23 +211,26 @@ function EmptyState() {
 }
 
 function UserFooter() {
-  const { data } = authClient.useSession();
-  const user = data?.user;
-
-  if (!user) return null;
-
+  if (!authState.value.loggedIn) return null;
   return (
     <div class="border-t border-[#e5e5e5] px-5 py-4">
-      <p class="text-xs font-medium truncate">{user.name}</p>
-      <p class="text-[11px] text-neutral-400 truncate">{user.email}</p>
+      <p class="text-xs font-medium truncate">{authState.value.user.name}</p>
+
+      <p class="text-[11px] text-neutral-400 truncate">
+        {authState.value.user.email}
+      </p>
+
       <button
         onClick={async () => {
           await authClient.signOut();
-          window.location.href = "/login";
+          await sync();
+          setTimeout(() => {
+            window.location.href = "/app";
+          }, 100);
         }}
-        class="text-[11px] text-neutral-400 hover:text-[#0a0a0a] mt-1"
+        class="mt-3 w-full text-left text-xs text-neutral-400 hover:text-[#0a0a0a] border border-[#e5e5e5] hover:border-[#0a0a0a] rounded px-3 py-1.5 transition-colors"
       >
-        Sign out
+        Log out
       </button>
     </div>
   );
