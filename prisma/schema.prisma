@@ -23,9 +23,38 @@ model User {
   updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
+  feeds         Feed[]
 
   @@unique([email])
   @@map("user")
+}
+
+model Feed {
+  id          String     @id @default(cuid())
+  url         String
+  title       String
+  description String?
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items       FeedItem[]
+  createdAt   DateTime   @default(now())
+
+  @@unique([url, userId])
+  @@map("feed")
+}
+
+model FeedItem {
+  id          String    @id @default(cuid())
+  feedId      String
+  feed        Feed      @relation(fields: [feedId], references: [id], onDelete: Cascade)
+  title       String
+  url         String
+  description String?
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  isRead Boolean @default(false)
+
+  @@map("feed_item")
 }
 
 model Session {
