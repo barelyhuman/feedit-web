@@ -10,6 +10,7 @@ import {
   addFeedLoading,
   loadFeeds,
   addFeed,
+  markAsRead,
 } from "../store/feeds";
 
 function formatDate(dateStr) {
@@ -26,27 +27,41 @@ function formatDate(dateStr) {
 
 function FeedItemRow({ item }) {
   const date = formatDate(item.publishedAt);
+  const handleClick = async () => {
+    await markAsRead(selectedFeedId.value, item.id);
+  };
   return (
-    <a
-      href={item.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      class="block py-4 border-b border-[#e5e5e5] group"
-    >
-      <div class="flex items-baseline justify-between gap-4">
-        <p class="text-sm font-medium leading-snug line-clamp-2 group-hover:underline">
-          {item.title}
-        </p>
-        {date && (
-          <span class="text-[11px] text-neutral-400 flex-shrink-0">{date}</span>
-        )}
-      </div>
-      {item.description && (
-        <p class="text-xs text-neutral-400 mt-1 line-clamp-1">
-          {item.description}
-        </p>
-      )}
-    </a>
+    <div onClick={handleClick}>
+      <a
+        href={item.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="block py-4 group"
+      >
+        <div class="flex items-center gap-1">
+          {!item.isRead ? (
+            <div class="flex h-4 w-2 self-start mt-1 rounded-full bg-black"></div>
+          ) : null}
+          <div>
+            <div class="flex items-baseline justify-between gap-4">
+              <p class="text-sm font-medium leading-snug line-clamp-2 group-hover:underline">
+                {item.title}
+              </p>
+              {date && (
+                <span class="text-[11px] text-neutral-400 flex-shrink-0">
+                  {date}
+                </span>
+              )}
+            </div>
+            {item.description && (
+              <p class="text-xs text-neutral-400 mt-1 line-clamp-1">
+                {item.description}
+              </p>
+            )}
+          </div>
+        </div>
+      </a>
+    </div>
   );
 }
 

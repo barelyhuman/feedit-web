@@ -8,6 +8,7 @@ export type FeedItem = {
   description: string | null;
   publishedAt: string | null;
   createdAt: string;
+  isRead: boolean;
 };
 
 export type Feed = {
@@ -26,8 +27,8 @@ export const loadingFeeds = signal(true);
 export const addingFeed = signal(false);
 export const addFeedLoading = signal(false);
 
-export const selectedFeed = computed(() =>
-  feedsState.value.find((f) => f.id === selectedFeedId.value) ?? null
+export const selectedFeed = computed(
+  () => feedsState.value.find((f) => f.id === selectedFeedId.value) ?? null,
 );
 
 export async function loadFeeds() {
@@ -62,4 +63,38 @@ export async function addFeed(url: string): Promise<{ error?: string }> {
   } finally {
     addFeedLoading.value = false;
   }
+}
+
+export async function markAsRead(
+  feedId: string,
+  itemId: string,
+): Promise<{ error?: string }> {
+  feedsState.value = feedsState.value.map((d) => {
+    const { items, ...rest } = d;
+    return {
+      ...rest,
+      items: items.map((x) => {
+        const { isRead, ...rest } = x;
+        return {
+          ...rest,
+          isRead: x.id === itemId,
+        };
+      }),
+    };
+  });
+
+  try {
+    const res = await fetch(`/api/feeds/${feedId}/item/${itemId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isRead: true }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      return { error: data.error ?? "Failed to add feed" };
+    }
+  } catch (err) {
+    return { error: err };
+  }
+  return;
 }

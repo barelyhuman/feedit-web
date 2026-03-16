@@ -5,7 +5,21 @@ import { XMLParser } from "fast-xml-parser";
 
 const prisma = new PrismaClient();
 
-function stripHtml(html) {
+function extractHtml(block) {
+  if (typeof block === "string") {
+    return block;
+  }
+  if (
+    typeof block === "object" &&
+    "@_type" in block &&
+    block["@_type"] === "html"
+  ) {
+    return block["#text"] ?? "";
+  }
+}
+
+function stripHtml(htmlBlock) {
+  const html = extractHtml(htmlBlock);
   if (!html) return null;
   return html
     .replace(/<[^>]*>/g, " ")
