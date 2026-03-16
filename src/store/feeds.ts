@@ -31,6 +31,15 @@ export const selectedFeed = computed(
   () => feedsState.value.find((f) => f.id === selectedFeedId.value) ?? null,
 );
 
+export const unreadCountByFeed = computed(() =>
+  Object.fromEntries(
+    feedsState.value.map((f) => [
+      f.id,
+      f.items.filter((item) => !item.isRead).length,
+    ]),
+  ),
+);
+
 export async function loadFeeds() {
   loadingFeeds.value = true;
   try {
@@ -77,7 +86,7 @@ export async function markAsRead(
         const { isRead, ...rest } = x;
         return {
           ...rest,
-          isRead: x.id === itemId,
+          isRead: x.id === itemId ? true : isRead,
         };
       }),
     };

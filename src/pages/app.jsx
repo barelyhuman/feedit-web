@@ -5,6 +5,7 @@ import {
   feedsState,
   selectedFeedId,
   selectedFeed,
+  unreadCountByFeed,
   loadingFeeds,
   addingFeed,
   addFeedLoading,
@@ -38,10 +39,12 @@ function FeedItemRow({ item }) {
         rel="noopener noreferrer"
         class="block py-4 group"
       >
-        <div class="flex items-center gap-1">
-          {!item.isRead ? (
-            <div class="flex h-4 w-2 self-start mt-1 rounded-full bg-black"></div>
-          ) : null}
+        <div class="flex items-center gap-2">
+          <div class="w-2 h-10">
+            {!item.isRead ? (
+              <div class="h-full w-1 self-start mt-1 rounded-full bg-black"></div>
+            ) : null}
+          </div>
           <div>
             <div class="flex items-baseline justify-between gap-4">
               <p class="text-sm font-medium leading-snug line-clamp-2 group-hover:underline">
@@ -142,22 +145,30 @@ export default function App() {
             <p class="text-xs text-neutral-400 px-5 py-2">No feeds yet</p>
           ) : (
             <ul class="mt-1">
-              {feeds.map((f) => (
-                <li key={f.id}>
-                  <button
-                    onClick={() => {
-                      selectedFeedId.value = f.id;
-                    }}
-                    class={`w-full text-left px-5 py-2 text-sm truncate hover:text-[#0a0a0a] ${
-                      selectedFeedId.value === f.id
-                        ? "text-[#0a0a0a] font-medium"
-                        : "text-neutral-500"
-                    }`}
-                  >
-                    {f.title}
-                  </button>
-                </li>
-              ))}
+              {feeds.map((f) => {
+                const unread = unreadCountByFeed.value[f.id] ?? 0;
+                return (
+                  <li key={f.id}>
+                    <button
+                      onClick={() => {
+                        selectedFeedId.value = f.id;
+                      }}
+                      class={`w-full text-left px-5 py-2 text-sm flex items-center justify-between gap-2 hover:text-[#0a0a0a] ${
+                        selectedFeedId.value === f.id
+                          ? "text-[#0a0a0a] font-medium"
+                          : "text-neutral-500"
+                      }`}
+                    >
+                      <span class="truncate">{f.title}</span>
+                      {unread > 0 && (
+                        <span class="flex-shrink-0 text-[10px] font-medium text-neutral-400">
+                          {unread}
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
