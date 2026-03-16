@@ -6,6 +6,7 @@ import { XMLParser } from "fast-xml-parser";
 const prisma = new PrismaClient();
 
 function extractHtml(block) {
+  if (!block) return;
   if (typeof block === "string") {
     return block;
   }

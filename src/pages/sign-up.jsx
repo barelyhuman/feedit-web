@@ -19,7 +19,7 @@ import { toast } from "@/lib/toast";
 
 export default () => {
   const loading = useSignal(false);
-  useEnforceUnAuthenticated();
+  const { loading: userLoading } = useEnforceUnAuthenticated();
 
   const onSubmit = async (e) => {
     try {
@@ -46,6 +46,8 @@ export default () => {
       loading.value = false;
     }
   };
+
+  if (userLoading) return <></>;
 
   return (
     <div class="max-w-4xl mx-auto flex flex-col justify-center items-center min-h-[100vh] gap-3">

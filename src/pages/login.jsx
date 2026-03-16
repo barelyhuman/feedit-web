@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/lib/toast";
 
 export default () => {
-  useEnforceUnAuthenticated();
+  const { loading: userLoading } = useEnforceUnAuthenticated();
   const loading = useSignal(false);
 
   const onSubmit = async (e) => {
@@ -38,6 +38,8 @@ export default () => {
       loading.value = false;
     }
   };
+
+  if (userLoading) return <></>;
 
   return (
     <div class="max-w-4xl mx-auto flex flex-col justify-center items-center min-h-[100vh] gap-3">

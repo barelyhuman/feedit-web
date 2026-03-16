@@ -31,6 +31,10 @@ export function useEnforceAuth() {
       window.location.href = "/";
     }
   });
+
+  return {
+    loading: authState.value.loading,
+  };
 }
 
 /**
@@ -47,4 +51,8 @@ export function useEnforceUnAuthenticated() {
       window.location.href = "/app";
     }
   });
+
+  return {
+    loading: authState.value.loading,
+  };
 }
