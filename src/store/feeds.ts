@@ -149,6 +149,44 @@ export async function importFeeds(
   }
 }
 
+export async function markAllRead(feedId: string): Promise<{ error?: string }> {
+  feedsState.value = feedsState.value.map((f) =>
+    f.id === feedId
+      ? { ...f, items: f.items.map((item) => ({ ...item, isRead: true })) }
+      : f,
+  );
+
+  try {
+    const res = await fetch(`/api/feeds/${feedId}/mark-all-read`, {
+      method: "POST",
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      return { error: data.error ?? "Failed to mark all read" };
+    }
+    loadUnreadCounts();
+  } catch (err) {
+    return { error: "Network error" };
+  }
+  return {};
+}
+
+export async function deleteFeed(feedId: string): Promise<{ error?: string }> {
+  try {
+    const res = await fetch(`/api/feeds/${feedId}`, { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json();
+      return { error: data.error ?? "Failed to delete feed" };
+    }
+    feedsState.value = feedsState.value.filter((f) => f.id !== feedId);
+    const { [feedId]: _, ...rest } = feedPagination.value;
+    feedPagination.value = rest;
+  } catch (err) {
+    return { error: "Network error" };
+  }
+  return {};
+}
+
 export async function markAsRead(
   feedId: string,
   itemId: string,

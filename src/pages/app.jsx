@@ -16,6 +16,8 @@ import {
   addFeed,
   importFeeds,
   markAsRead,
+  markAllRead,
+  deleteFeed,
 } from "../store/feeds";
 import { authClient } from "../../lib/auth_client";
 import { toast } from "../lib/toast";
@@ -123,6 +125,30 @@ export default function App() {
     document.addEventListener("click", handleOutsideClick);
     return () => document.removeEventListener("click", handleOutsideClick);
   }, [showMenu]);
+
+  async function handleMarkAllRead() {
+    const feed = selectedFeed.value;
+    if (!feed) return;
+    const { error } = await markAllRead(feed.id);
+    if (error) {
+      toast(error, "error");
+    } else {
+      toast("Marked all as read");
+    }
+  }
+
+  async function handleDeleteFeed() {
+    const feed = selectedFeed.value;
+    if (!feed) return;
+    if (!confirm(`Delete "${feed.title}"?`)) return;
+    const { error } = await deleteFeed(feed.id);
+    if (error) {
+      toast(error, "error");
+    } else {
+      selectedFeedId.value = null;
+      toast("Feed deleted");
+    }
+  }
 
   async function handleAddFeed(e) {
     e.preventDefault();
@@ -282,8 +308,22 @@ export default function App() {
           <div class="max-w-2xl mx-auto px-8 py-10">
             <h1 class="text-base font-semibold mb-0.5">{feed.title}</h1>
             {feed.description && (
-              <p class="text-xs text-neutral-400 mb-6">{feed.description}</p>
+              <p class="text-xs text-neutral-400 mb-1">{feed.description}</p>
             )}
+            <div class="w-full justify-end flex items-center gap-3 py-3">
+              <button
+                onClick={handleMarkAllRead}
+                class="border rounded-sm p-2 text-xs text-neutral-400 hover:text-[#0a0a0a] hover:border-[#0a0a0a]"
+              >
+                Mark all read
+              </button>
+              <button
+                onClick={handleDeleteFeed}
+                class="border rounded-sm p-2 text-xs text-neutral-400 hover:text-red-500 hover:border-red-500"
+              >
+                Delete feed
+              </button>
+            </div>
             <div class="border-t border-[#e5e5e5] mb-6" />
             {feed.items.length === 0 ? (
               <p class="text-sm text-neutral-400">No items found.</p>
