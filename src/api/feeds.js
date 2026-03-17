@@ -27,7 +27,7 @@ export default async function (req, res) {
       include: {
         items: { orderBy: { publishedAt: "desc" }, take: 50 },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { title: "asc" },
     });
     return res.json(feeds);
   }

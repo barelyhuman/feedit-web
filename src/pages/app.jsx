@@ -154,7 +154,7 @@ export default function App() {
             <span class="text-[10px] tracking-widest font-medium text-neutral-400 uppercase">
               Feeds
             </span>
-            <div class="flex items-center gap-1.5 relative" data-menu>
+            <div class="flex items-center gap-2 relative" data-menu>
               <button
                 onClick={() => {
                   addingFeed.value = !addingFeed.value;
@@ -166,7 +166,7 @@ export default function App() {
               </button>
               <button
                 onClick={() => setShowMenu((v) => !v)}
-                class="text-neutral-400 hover:text-[#0a0a0a] leading-none text-sm"
+                class="text-neutral-400 hover:text-[#0a0a0a] leading-none text-base"
                 title="More options"
               >
                 ⋯
