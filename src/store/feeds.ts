@@ -26,6 +26,7 @@ export const selectedFeedId = signal<string | null>(null);
 export const loadingFeeds = signal(true);
 export const addingFeed = signal(false);
 export const addFeedLoading = signal(false);
+export const importingFeeds = signal(false);
 
 export const selectedFeed = computed(
   () => feedsState.value.find((f) => f.id === selectedFeedId.value) ?? null,
@@ -71,6 +72,24 @@ export async function addFeed(url: string): Promise<{ error?: string }> {
     return { error: "Network error" };
   } finally {
     addFeedLoading.value = false;
+  }
+}
+
+export async function importFeeds(
+  urls: string[],
+): Promise<{ imported: number; failed: number }> {
+  importingFeeds.value = true;
+  try {
+    const res = await fetch("/api/feeds/import", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ urls }),
+    });
+    const data = await res.json();
+    await loadFeeds();
+    return data;
+  } finally {
+    importingFeeds.value = false;
   }
 }
 

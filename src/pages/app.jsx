@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { sync, authState, useEnforceAuth } from "../store/auth";
 import {
   feedsState,
@@ -8,11 +8,21 @@ import {
   loadingFeeds,
   addingFeed,
   addFeedLoading,
+  importingFeeds,
   loadFeeds,
   addFeed,
+  importFeeds,
   markAsRead,
 } from "../store/feeds";
 import { authClient } from "../../lib/auth_client";
+import { toast } from "../lib/toast";
+
+function parseOpml(text) {
+  const doc = new DOMParser().parseFromString(text, "text/xml");
+  return [...doc.querySelectorAll("outline[xmlUrl]")]
+    .map((el) => el.getAttribute("xmlUrl"))
+    .filter(Boolean);
+}
 
 function formatDate(dateStr) {
   if (!dateStr) return null;
@@ -71,6 +81,8 @@ function FeedItemRow({ item }) {
 export default function App() {
   useEnforceAuth();
   const inputRef = useRef(null);
+  const opmlInputRef = useRef(null);
+  const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
     loadFeeds();
@@ -81,6 +93,17 @@ export default function App() {
       inputRef.current.focus();
     }
   }, [addingFeed.value]);
+
+  useEffect(() => {
+    if (!showMenu) return;
+    function handleOutsideClick(e) {
+      if (!e.target.closest("[data-menu]")) {
+        setShowMenu(false);
+      }
+    }
+    document.addEventListener("click", handleOutsideClick);
+    return () => document.removeEventListener("click", handleOutsideClick);
+  }, [showMenu]);
 
   async function handleAddFeed(e) {
     e.preventDefault();
@@ -93,6 +116,24 @@ export default function App() {
     } else {
       alert(error);
     }
+  }
+
+  async function handleOpmlFile(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    const urls = parseOpml(text);
+    e.target.value = "";
+    if (urls.length === 0) {
+      toast("No feeds found in OPML file");
+      return;
+    }
+    const { imported, failed } = await importFeeds(urls);
+    toast(
+      failed > 0
+        ? `Imported ${imported}, ${failed} failed`
+        : `Imported ${imported} feed${imported === 1 ? "" : "s"}`,
+    );
   }
 
   const feeds = feedsState.value;
@@ -113,16 +154,50 @@ export default function App() {
             <span class="text-[10px] tracking-widest font-medium text-neutral-400 uppercase">
               Feeds
             </span>
-            <button
-              onClick={() => {
-                addingFeed.value = !addingFeed.value;
-              }}
-              class="text-neutral-400 hover:text-[#0a0a0a] leading-none"
-              title="Add feed"
-            >
-              +
-            </button>
+            <div class="flex items-center gap-1.5 relative" data-menu>
+              <button
+                onClick={() => {
+                  addingFeed.value = !addingFeed.value;
+                }}
+                class="text-neutral-400 hover:text-[#0a0a0a] leading-none"
+                title="Add feed"
+              >
+                +
+              </button>
+              <button
+                onClick={() => setShowMenu((v) => !v)}
+                class="text-neutral-400 hover:text-[#0a0a0a] leading-none text-sm"
+                title="More options"
+              >
+                ⋯
+              </button>
+              {showMenu && (
+                <div class="absolute right-0 top-5 bg-white border border-[#e5e5e5] rounded-md shadow-sm z-10 min-w-[120px]">
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      opmlInputRef.current?.click();
+                    }}
+                    class="w-full text-left px-3 py-2 text-xs hover:bg-neutral-50"
+                  >
+                    Import OPML
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
+
+          <input
+            ref={opmlInputRef}
+            type="file"
+            accept=".opml,.xml"
+            class="hidden"
+            onChange={handleOpmlFile}
+          />
+
+          {importingFeeds.value && (
+            <p class="text-xs text-neutral-400 px-5 py-2">Importing feeds…</p>
+          )}
 
           {addingFeed.value && (
             <form onSubmit={handleAddFeed}>
