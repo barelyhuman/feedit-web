@@ -9,8 +9,10 @@ import {
   addingFeed,
   addFeedLoading,
   importingFeeds,
+  feedPagination,
   loadFeeds,
   loadUnreadCounts,
+  loadMoreItems,
   addFeed,
   importFeeds,
   markAsRead,
@@ -83,6 +85,7 @@ export default function App() {
   useEnforceAuth();
   const inputRef = useRef(null);
   const opmlInputRef = useRef(null);
+  const sentinelRef = useRef(null);
   const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
@@ -95,6 +98,20 @@ export default function App() {
       inputRef.current.focus();
     }
   }, [addingFeed.value]);
+
+  useEffect(() => {
+    if (!sentinelRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          loadMoreItems(selectedFeedId.value);
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [selectedFeedId.value]);
 
   useEffect(() => {
     if (!showMenu) return;
@@ -271,9 +288,17 @@ export default function App() {
             {feed.items.length === 0 ? (
               <p class="text-sm text-neutral-400">No items found.</p>
             ) : (
-              feed.items.map((item) => (
-                <FeedItemRow key={item.id} item={item} />
-              ))
+              <>
+                {feed.items.map((item) => (
+                  <FeedItemRow key={item.id} item={item} />
+                ))}
+                <div ref={sentinelRef} />
+                {feedPagination.value[feed.id]?.loadingMore && (
+                  <p class="text-xs text-neutral-400 py-4 text-center">
+                    Loading…
+                  </p>
+                )}
+              </>
             )}
           </div>
         )}

@@ -21,12 +21,19 @@ export type Feed = {
   items: FeedItem[];
 };
 
+type FeedPagination = {
+  nextCursor: string | null;
+  hasMore: boolean;
+  loadingMore: boolean;
+};
+
 export const feedsState = signal<Feed[]>([]);
 export const selectedFeedId = signal<string | null>(null);
 export const loadingFeeds = signal(true);
 export const addingFeed = signal(false);
 export const addFeedLoading = signal(false);
 export const importingFeeds = signal(false);
+export const feedPagination = signal<Record<string, FeedPagination>>({});
 
 export const selectedFeed = computed(
   () => feedsState.value.find((f) => f.id === selectedFeedId.value) ?? null,
@@ -47,10 +54,58 @@ export async function loadFeeds() {
   try {
     const res = await fetch("/api/feeds");
     if (res.ok) {
-      feedsState.value = await res.json();
+      const feeds: Feed[] = await res.json();
+      feedsState.value = feeds;
+      const pagination: Record<string, FeedPagination> = {};
+      for (const f of feeds) {
+        const hasMore = f.items.length >= 50;
+        pagination[f.id] = {
+          nextCursor: hasMore ? (f.items.at(-1)?.id ?? null) : null,
+          hasMore,
+          loadingMore: false,
+        };
+      }
+      feedPagination.value = pagination;
     }
   } finally {
     loadingFeeds.value = false;
+  }
+}
+
+export async function loadMoreItems(feedId: string) {
+  const p = feedPagination.value[feedId];
+  if (!p?.hasMore || p.loadingMore) return;
+
+  feedPagination.value = {
+    ...feedPagination.value,
+    [feedId]: { ...p, loadingMore: true },
+  };
+
+  try {
+    const res = await fetch(
+      `/api/feeds/${feedId}/items?cursor=${p.nextCursor}`,
+    );
+    if (!res.ok) return;
+    const { items, nextCursor }: { items: FeedItem[]; nextCursor: string | null } =
+      await res.json();
+
+    feedsState.value = feedsState.value.map((f) =>
+      f.id === feedId ? { ...f, items: [...f.items, ...items] } : f,
+    );
+
+    feedPagination.value = {
+      ...feedPagination.value,
+      [feedId]: {
+        nextCursor,
+        hasMore: nextCursor !== null,
+        loadingMore: false,
+      },
+    };
+  } catch {
+    feedPagination.value = {
+      ...feedPagination.value,
+      [feedId]: { ...feedPagination.value[feedId], loadingMore: false },
+    };
   }
 }
 
