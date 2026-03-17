@@ -4,12 +4,13 @@ import {
   feedsState,
   selectedFeedId,
   selectedFeed,
-  unreadCountByFeed,
+  unreadCounts,
   loadingFeeds,
   addingFeed,
   addFeedLoading,
   importingFeeds,
   loadFeeds,
+  loadUnreadCounts,
   addFeed,
   importFeeds,
   markAsRead,
@@ -86,6 +87,7 @@ export default function App() {
 
   useEffect(() => {
     loadFeeds();
+    loadUnreadCounts();
   }, []);
 
   useEffect(() => {
@@ -221,7 +223,8 @@ export default function App() {
           ) : (
             <ul class="mt-1">
               {feeds.map((f) => {
-                const unread = unreadCountByFeed.value[f.id] ?? 0;
+                const counts = unreadCounts.value;
+                const unread = counts !== null ? (counts[f.id] ?? 0) : null;
                 return (
                   <li key={f.id}>
                     <button
@@ -235,11 +238,13 @@ export default function App() {
                       }`}
                     >
                       <span class="truncate">{f.title}</span>
-                      {unread > 0 && (
+                      {unread === null ? (
+                        <span class="flex-shrink-0 w-5 h-2.5 rounded bg-neutral-200 animate-pulse" />
+                      ) : unread > 0 ? (
                         <span class="flex-shrink-0 text-[10px] font-medium text-neutral-400">
                           {unread}
                         </span>
-                      )}
+                      ) : null}
                     </button>
                   </li>
                 );

@@ -32,14 +32,15 @@ export const selectedFeed = computed(
   () => feedsState.value.find((f) => f.id === selectedFeedId.value) ?? null,
 );
 
-export const unreadCountByFeed = computed(() =>
-  Object.fromEntries(
-    feedsState.value.map((f) => [
-      f.id,
-      f.items.filter((item) => !item.isRead).length,
-    ]),
-  ),
-);
+// null = still loading
+export const unreadCounts = signal<Record<string, number> | null>(null);
+
+export async function loadUnreadCounts() {
+  const res = await fetch("/api/feeds/unread-counts");
+  if (res.ok) {
+    unreadCounts.value = await res.json();
+  }
+}
 
 export async function loadFeeds() {
   loadingFeeds.value = true;
@@ -86,7 +87,7 @@ export async function importFeeds(
       body: JSON.stringify({ urls }),
     });
     const data = await res.json();
-    await loadFeeds();
+    await Promise.all([loadFeeds(), loadUnreadCounts()]);
     return data;
   } finally {
     importingFeeds.value = false;
@@ -121,6 +122,7 @@ export async function markAsRead(
     if (!res.ok) {
       return { error: data.error ?? "Failed to add feed" };
     }
+    loadUnreadCounts();
   } catch (err) {
     return { error: err };
   }
