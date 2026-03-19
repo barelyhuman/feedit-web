@@ -12,6 +12,7 @@ import {
   feedPagination,
   loadFeeds,
   loadUnreadCounts,
+  refreshFeeds,
   loadMoreItems,
   addFeed,
   importFeeds,
@@ -93,6 +94,7 @@ export default function App() {
   useEffect(() => {
     loadFeeds();
     loadUnreadCounts();
+    refreshFeeds();
   }, []);
 
   useEffect(() => {
