@@ -34,6 +34,7 @@ export const addingFeed = signal(false);
 export const addFeedLoading = signal(false);
 export const importingFeeds = signal(false);
 export const feedPagination = signal<Record<string, FeedPagination>>({});
+export const refreshingFeeds = signal(false);
 
 export const selectedFeed = computed(
   () => feedsState.value.find((f) => f.id === selectedFeedId.value) ?? null,
@@ -69,6 +70,18 @@ export async function loadFeeds() {
     }
   } finally {
     loadingFeeds.value = false;
+  }
+}
+
+export async function refreshFeeds() {
+  refreshingFeeds.value = true;
+  try {
+    const res = await fetch("/api/feeds/refresh", { method: "POST" });
+    if (res.ok) {
+      await Promise.all([loadFeeds(), loadUnreadCounts()]);
+    }
+  } finally {
+    refreshingFeeds.value = false;
   }
 }
 
