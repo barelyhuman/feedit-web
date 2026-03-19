@@ -34,3 +34,5 @@ yalc.lock
 
 /data
 /.islands
+package-lock.json
+
