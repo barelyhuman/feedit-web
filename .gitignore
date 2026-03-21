@@ -24,7 +24,7 @@ dist-ssr
 *.sw?
 
 
-# yalc 
+# yalc
 yalc.lock
 .yalc
 
@@ -34,3 +34,5 @@ yalc.lock
 
 /data
 /.islands
+
+*.sqlite3
