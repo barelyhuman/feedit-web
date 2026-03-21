@@ -42,6 +42,12 @@ export const selectedFeed = computed(
 
 // null = still loading
 export const unreadCounts = signal<Record<string, number> | null>(null);
+export const totalUnread = computed(() => {
+  return Object.keys(unreadCounts.value).reduce(
+    (acc, key) => acc + (unreadCounts.value[key] ?? 0),
+    0,
+  );
+});
 
 export async function loadUnreadCounts() {
   const res = await fetch("/api/feeds/unread-counts");
@@ -99,8 +105,10 @@ export async function loadMoreItems(feedId: string) {
       `/api/feeds/${feedId}/items?cursor=${p.nextCursor}`,
     );
     if (!res.ok) return;
-    const { items, nextCursor }: { items: FeedItem[]; nextCursor: string | null } =
-      await res.json();
+    const {
+      items,
+      nextCursor,
+    }: { items: FeedItem[]; nextCursor: string | null } = await res.json();
 
     feedsState.value = feedsState.value.map((f) =>
       f.id === feedId ? { ...f, items: [...f.items, ...items] } : f,

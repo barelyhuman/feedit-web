@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { sync, authState, useEnforceAuth } from "../store/auth";
+import { ChevronDown, ChevronRight, Plus, Ellipsis } from "lucide-preact";
 import {
   feedsState,
   selectedFeedId,
@@ -19,6 +20,7 @@ import {
   markAsRead,
   markAllRead,
   deleteFeed,
+  totalUnread,
 } from "../store/feeds";
 import { authClient } from "../../lib/auth_client";
 import { toast } from "../lib/toast";
@@ -90,6 +92,7 @@ export default function App() {
   const opmlInputRef = useRef(null);
   const sentinelRef = useRef(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [unreadOpen, setUnreadOpen] = useState(true);
 
   useEffect(() => {
     loadFeeds();
@@ -197,6 +200,70 @@ export default function App() {
 
         {/* Feeds list */}
         <div class="flex-1 overflow-y-auto">
+          {(() => {
+            const counts = unreadCounts.value;
+            const feedsWithUnread =
+              counts !== null
+                ? feeds.filter((f) => (counts[f.id] ?? 0) > 0)
+                : [];
+            return (
+              <div>
+                <div
+                  class="flex items-center justify-between px-5 pt-4 pb-1 group hover:cursor-pointer"
+                  onClick={() => setUnreadOpen((v) => !v)}
+                >
+                  <div class="flex w-[85%] justify-between gap-1 text-[10px]">
+                    <span class="text-[10px] tracking-widest font-medium text-neutral-400 group-hover:text-[#0a0a0a] uppercase">
+                      Unread
+                    </span>
+                    <span>{totalUnread.value}</span>
+                  </div>
+                  <div class="w-[15%] flex justify-end items-center">
+                    <button class="text-neutral-400 group-hover:text-[#0a0a0a] leading-none text-[10px]">
+                      {unreadOpen ? (
+                        <ChevronDown size="14" />
+                      ) : (
+                        <ChevronRight size="14" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+                {unreadOpen &&
+                  counts !== null &&
+                  feedsWithUnread.length === 0 && (
+                    <div class="px-5 pt-4 truncate text-[10px] tracking-widest font-medium text-neutral-500 uppercase">
+                      <span>No new items</span>
+                    </div>
+                  )}
+                {unreadOpen && (
+                  <ul class="mt-1">
+                    {feedsWithUnread.map((f) => {
+                      const unread = counts[f.id];
+                      return (
+                        <li key={f.id}>
+                          <button
+                            onClick={() => {
+                              selectedFeedId.value = f.id;
+                            }}
+                            class={`w-full text-left px-5 py-2 text-sm flex items-center justify-between gap-2 hover:text-[#0a0a0a] ${
+                              selectedFeedId.value === f.id
+                                ? "text-[#0a0a0a] font-medium"
+                                : "text-neutral-500"
+                            }`}
+                          >
+                            <span class="truncate">{f.title}</span>
+                            <span class="flex-shrink-0 text-[10px] font-medium text-neutral-400">
+                              {unread}
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            );
+          })()}
           <div class="flex items-center justify-between px-5 pt-4 pb-1">
             <span class="text-[10px] tracking-widest font-medium text-neutral-400 uppercase">
               Feeds
@@ -209,14 +276,14 @@ export default function App() {
                 class="text-neutral-400 hover:text-[#0a0a0a] leading-none"
                 title="Add feed"
               >
-                +
+                <Plus size="14" />
               </button>
               <button
                 onClick={() => setShowMenu((v) => !v)}
                 class="text-neutral-400 hover:text-[#0a0a0a] leading-none text-base"
                 title="More options"
               >
-                ⋯
+                <Ellipsis size="14" />
               </button>
               {showMenu && (
                 <div class="absolute right-0 top-5 bg-white border border-[#e5e5e5] rounded-md shadow-sm z-10 min-w-[120px]">
