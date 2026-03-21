@@ -43,10 +43,12 @@ export const selectedFeed = computed(
 // null = still loading
 export const unreadCounts = signal<Record<string, number> | null>(null);
 export const totalUnread = computed(() => {
-  return Object.keys(unreadCounts.value).reduce(
-    (acc, key) => acc + (unreadCounts.value[key] ?? 0),
-    0,
-  );
+  return unreadCounts.value
+    ? Object.keys(unreadCounts.value).reduce(
+        (acc, key) => acc + (unreadCounts.value[key] ?? 0),
+        0,
+      )
+    : 0;
 });
 
 export async function loadUnreadCounts() {
